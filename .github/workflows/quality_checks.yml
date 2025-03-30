@@ -1,0 +1,65 @@
+name: Quality Checks
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  quality-checks:
+    name: Quality Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the repository
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # Set up Terraform Linter (tflint)
+      - name: Install tflint
+        run: |
+          curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
+
+      # Run Terraform Linter
+      - name: Run tflint
+        run: tflint --chdir=./environments
+
+      # Set up Terraform
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.0
+
+      # Validate Terraform Configuration
+      - name: Terraform Validate
+        run: terraform validate ./environments
+
+      # Run Static Code Analysis with Self-Hosted SonarQube
+      - name: SonarQube Analysis
+        uses: SonarSource/sonarcloud-github-action@v1
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          projectBaseDir: .
+          args: >
+            -Dsonar.projectKey=your_project_key
+            -Dsonar.host.url=http://<your-ec2-ip>:9000
+            -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+
+      # Install Trivy
+      - name: Install Trivy
+        run: |
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+
+      # Run Trivy to Scan Terraform Files
+      - name: Trivy Scan
+        run: trivy fs ./environments
+
+      # Run Unit Tests (if applicable)
+      - name: Run Unit Tests
+        run: |
+          echo "Running unit tests..."
+          # Add your unit testing commands here

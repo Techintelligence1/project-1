@@ -1,12 +1,7 @@
 name: Terraform Workflow
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+  workflow_dispatch:
 
 jobs:
   terraform:
@@ -40,7 +35,7 @@ jobs:
 
       # Terraform Apply
       - name: Terraform Apply
-        if: github.event_name == 'push'
+        if: github.event_name == 'workflow_dispatch'
         run: terraform apply -auto-approve tfplan
         working-directory: ./environments/${{ matrix.environment }}
 
