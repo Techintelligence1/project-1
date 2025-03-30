@@ -25,7 +25,7 @@ jobs:
 
       # Run Terraform Linter
       - name: Run tflint
-        run: tflint ./environments
+        run: tflint --chdir=./environments
 
       # Set up Terraform
       - name: Setup Terraform
