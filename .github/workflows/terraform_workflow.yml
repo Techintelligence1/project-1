@@ -1,0 +1,50 @@
+name: Terraform Workflow
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  terraform:
+    name: Terraform Workflow
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        environment: [dev, staging, prod]
+
+    steps:
+      # Checkout the repository
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # Set up Terraform
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.0
+
+      # Initialize Terraform
+      - name: Terraform Init
+        run: terraform init
+        working-directory: ./environments/${{ matrix.environment }}
+
+      # Terraform Plan
+      - name: Terraform Plan
+        run: terraform plan -out=tfplan
+        working-directory: ./environments/${{ matrix.environment }}
+
+      # Terraform Apply
+      - name: Terraform Apply
+        if: github.event_name == 'push'
+        run: terraform apply -auto-approve tfplan
+        working-directory: ./environments/${{ matrix.environment }}
+
+      # Terraform Outputs
+      - name: Terraform Outputs
+        run: terraform output
+        working-directory: ./environments/${{ matrix.environment }}
