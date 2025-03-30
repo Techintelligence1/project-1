@@ -3,5 +3,5 @@ output "instance_public_ip" {
 }
 
 output "private_key_path" {
-  value = "${path.module}/taste.pem"
+  value = "${path.module}/taste2.pem"
 }
